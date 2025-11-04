@@ -2,8 +2,11 @@ import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { Searchcontext } from "../contextApi/SearchContext";
 import { useNavigate } from "react-router-dom";
+import dotenv from 'dotenv'
+
 
 const Home = () => {
+  
   const [datas, setDatas] = useState([]);
   const { data, search, loading } = useContext(Searchcontext);
   const navigate=useNavigate();
@@ -11,7 +14,7 @@ const Home = () => {
   useEffect(() => {
     const getDefaultData = async () => {
       try {
-        const res = await axios.get(`https://youtube-clone-backend-j06q.onrender.com/api/search`);
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/search`);
         setDatas(res.data);
       } catch (err) {
         console.error("Error fetching default videos:", err);
