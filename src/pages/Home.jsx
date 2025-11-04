@@ -11,7 +11,7 @@ const Home = () => {
   useEffect(() => {
     const getDefaultData = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/api/search`);
+        const res = await axios.get(`https://youtube-clone-backend-j06q.onrender.com/api/search`);
         setDatas(res.data);
       } catch (err) {
         console.error("Error fetching default videos:", err);

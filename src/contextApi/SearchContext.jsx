@@ -18,7 +18,7 @@ export const SearchcontextProvider = ({ children }) => {
 const fetchData = async () => {
   try {
     setLoading(true);
-    const res = await axios.get(`http://localhost:3000/api/search?q=${query}`);
+    const res = await axios.get(`https://youtube-clone-backend-j06q.onrender.com/api/search?q=${query}`);
     console.log("✅ YouTube results from backend:", res.data);
     setData(res.data || []);
   } catch (error) {
