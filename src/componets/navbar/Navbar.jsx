@@ -10,13 +10,13 @@ const Navbar = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (query.trim() !== "") {
-      setSearch(true); // trigger search
-      navigate("/");   // ✅ always go home to show search results
+      setSearch(true);
+      navigate("/");
     }
   };
 
   return (
-    <header className="w-full bg-white shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-20">
+    <header className="w-full bg-white shadow-md py-3 px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center sticky top-0 z-20 gap-3">
       <h1
         className="text-2xl font-bold text-red-500 tracking-wide cursor-pointer"
         onClick={() => {
@@ -29,7 +29,7 @@ const Navbar = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="flex items-center bg-gray-100 rounded-full px-4 py-2 w-full sm:w-96"
+        className="flex items-center bg-gray-200 rounded-full px-4 py-2 w-full sm:w-96 max-w-md"
       >
         <input
           type="text"

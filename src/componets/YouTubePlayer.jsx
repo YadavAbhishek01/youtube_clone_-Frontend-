@@ -4,7 +4,7 @@ import YouTube from "react-youtube";
 const YouTubePlayer = ({ videoId }) => {
   const opts = {
     width: "100%",
-    height: "500",
+    height: "100%",
     playerVars: {
       modestbranding: 1,
       rel: 0,
@@ -15,19 +15,12 @@ const YouTubePlayer = ({ videoId }) => {
     },
   };
 
-  const onReady = (event) => {
-    // You can auto-play if you want:
-    // event.target.playVideo();
-  };
-
   return (
-    <div className="relative w-full max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-xl bg-black" 
-    onClick={(e)=>console.log(e.target.value)}>
-      {/* Aspect ratio container */}
+    <div className="w-full max-w-5xl mx-auto rounded-xl overflow-hidden shadow-xl bg-black">
+      {/* Responsive container maintaining 16:9 ratio */}
       <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-        {/* YouTube iframe absolutely positioned */}
         <div className="absolute top-0 left-0 w-full h-full">
-          <YouTube videoId={videoId} opts={opts} onReady={onReady} />
+          <YouTube videoId={videoId} opts={opts} className="w-full h-full" />
         </div>
       </div>
     </div>

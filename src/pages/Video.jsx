@@ -7,14 +7,15 @@ const Video = () => {
   const { setSearch } = useContext(Searchcontext);
   const { id } = useParams();
 
-  // When opening video, stop search mode
   useEffect(() => {
     setSearch(false);
   }, [setSearch]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
-      <YouTubePlayer videoId={id} />
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-2 sm:px-6 py-4">
+      <div className="w-full max-w-5xl">
+        <YouTubePlayer videoId={id} />
+      </div>
     </div>
   );
 };
