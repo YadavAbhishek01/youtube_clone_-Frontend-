@@ -1,0 +1,6 @@
+@import "tailwindcss";
+/* Add to your global CSS */
+.ytp-endscreen-content,
+.ytp-pause-overlay {
+  display: none !important;
+}
