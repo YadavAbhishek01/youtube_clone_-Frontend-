@@ -4,43 +4,56 @@ import axios from "axios";
 export const Searchcontext = createContext();
 
 export const SearchcontextProvider = ({ children }) => {
-  const [data, setData] = useState([]);
   const [query, setQuery] = useState("");
-  const [search, setSearch] = useState(false);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState(false);
+  const [randomevideo,setRandomevideo]=useState([]);
 
-  // ✅ Fetch only when `search` changes to true and `query` exists
-  useEffect(() => {
-    if (search && query.trim() !== "") {
-      fetchData();
+  const decodeBase64 = (encoded) => {
+    try {
+      return JSON.parse(atob(encoded));
+    } catch {
+      return [];
     }
-  }, [search,query]);
-const fetchData = async () => {
-  try {
-    setLoading(true);
-    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/search?q=${query}`);
-    console.log("✅ YouTube results from backend:", res.data);
-    setData(res.data || []);
-  } catch (error) {
-    console.error("❌ Fetch error:", error.response?.data || error.message);
-  } finally {
-    setLoading(false);
+  };
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      if (!search || !query) return;
+
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/search?q=${query}`
+        );  
+
+        const decoded = decodeBase64(res.data.data || res.data.encoded);
+        setData(decoded);
    
-  }
-};
+      } catch (err) {
+        console.error("❌ Error fetching category:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-
+    fetchVideos();
+  }, [query, search]);
 
   return (
     <Searchcontext.Provider
       value={{
-        data,
-        setQuery,
         query,
-        setSearch,
-        search,
-        loading,
+        setQuery,
+        data,
         setData,
+        loading,
+        search,
+        setSearch,
+        setLoading,
+        setRandomevideo,
+        randomevideo,
       }}
     >
       {children}

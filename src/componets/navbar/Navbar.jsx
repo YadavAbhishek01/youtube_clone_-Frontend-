@@ -1,20 +1,39 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { Searchcontext } from "../../contextApi/SearchContext";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { query, setQuery, setSearch } = useContext(Searchcontext);
+  const { setQuery, setSearch } = useContext(Searchcontext);
+  const [inputValue, setInputValue] = useState(""); // local input state
+
+  // ✅ Debounce logic
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (inputValue.trim() !== "") {
+        setQuery(inputValue);
+        setSearch(true);
+      } else {
+        setSearch(false);
+      }
+    }, 2000); // ⏱ wait 600ms after user stops typing
+
+    // cleanup if user keeps typing
+    return () => clearTimeout(handler);
+  }, [inputValue, setQuery, setSearch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (query.trim() !== "") {
+    if (inputValue.trim() !== "") {
+      setQuery(inputValue);
       setSearch(true);
       navigate("/");
+        
     }
+    
+  
   };
-
   return (
     <header className="w-full bg-white shadow-md py-3 px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center sticky top-0 z-20 gap-3">
       <h1
@@ -33,9 +52,9 @@ const Navbar = () => {
       >
         <input
           type="text"
-          value={query}
           placeholder="Search videos..."
-          onChange={(e) => setQuery(e.target.value)}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           className="flex bg-transparent outline-none px-2 text-gray-700 w-full"
         />
         <button
