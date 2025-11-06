@@ -8,15 +8,10 @@ export const SearchcontextProvider = ({ children }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState(false);
-  const [randomevideo,setRandomevideo]=useState([]);
+  const [randomevideo, setRandomevideo] = useState([]);
 
-  const decodeBase64 = (encoded) => {
-    try {
-      return JSON.parse(atob(encoded));
-    } catch {
-      return [];
-    }
-  };
+  // ✅ Decode Base64 (matches backend)
+
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -26,13 +21,14 @@ export const SearchcontextProvider = ({ children }) => {
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/api/search?q=${query}`
-        );  
+        );
 
-        const decoded = decodeBase64(res.data.data || res.data.encoded);
-        setData(decoded);
-   
+      
+        console.log(res.data.data)
+        setData(res.data.data);
+ 
       } catch (err) {
-        console.error("❌ Error fetching category:", err);
+        console.error("❌ Error fetching videos:", err);
       } finally {
         setLoading(false);
       }
@@ -52,8 +48,8 @@ export const SearchcontextProvider = ({ children }) => {
         search,
         setSearch,
         setLoading,
-        setRandomevideo,
         randomevideo,
+        setRandomevideo,
       }}
     >
       {children}

@@ -11,13 +11,7 @@ const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const decodeBase64 = (encoded) => {
-    try {
-      return JSON.parse(atob(encoded));
-    } catch {
-      return [];
-    }
-  };
+ 
 
   useEffect(() => {
     // ✅ Only fetch random videos if user is not searching
@@ -28,9 +22,10 @@ const Home = () => {
           const res = await axios.get(
             `${import.meta.env.VITE_BACKEND_URL}/api/random`
           );
-          const decoded = decodeBase64(res.data.data);
-          setDatas(decoded);
-          setRandomevideo(decoded)
+          console.log(res.data.data)
+        
+          setDatas(res.data.data);
+          setRandomevideo(res.data.data)
           
           
         } catch (err) {
@@ -65,7 +60,7 @@ const Home = () => {
                 <div
                   key={item._id || item.videoId}
                   className="bg-white rounded-xl shadow hover:shadow-lg transition-transform duration-200 hover:scale-[1.02] overflow-hidden cursor-pointer"
-                  onClick={() => navigate(`/video/${item.videoId}`)}
+                  onClick={() => navigate(`/video/${item.videoId}?chId=${item.channelId}`)}
                 >
                   <img
                     src={item.thumbnail}
