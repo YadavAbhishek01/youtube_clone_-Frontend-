@@ -4,7 +4,7 @@ import Layout from "./componets/mainlayout/Layout"; // double-check spelling!
 import Home from "./pages/Home";
 
 function App() {
-  return (
+  return ( 
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home/>} />
