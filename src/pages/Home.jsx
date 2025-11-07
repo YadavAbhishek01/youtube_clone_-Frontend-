@@ -3,18 +3,17 @@ import axios from "axios";
 import { Searchcontext } from "../contextApi/SearchContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
-
+import { toast } from "react-toastify";
 const Home = () => {
   const [datas, setDatas] = useState([]);
-  const { data, search, loading, setLoading ,setRandomevideo} = useContext(Searchcontext);
+  const { data, search, loading, setLoading, setRandomevideo } =
+    useContext(Searchcontext);
 
   const navigate = useNavigate();
   const location = useLocation();
 
- 
-
   useEffect(() => {
-    // ✅ Only fetch random videos if user is not searching
+    // ✅ Only fetch random videos when user is NOT searching
     if (!search && location.pathname === "/") {
       const getRandomVideos = async () => {
         setLoading(true);
@@ -22,14 +21,18 @@ const Home = () => {
           const res = await axios.get(
             `${import.meta.env.VITE_BACKEND_URL}/api/random`
           );
-          console.log(res.data.data)
-        
-          setDatas(res.data.data);
-          setRandomevideo(res.data.data)
-          
-          
+
+          if (res.data?.success && Array.isArray(res.data.data)) {
+            setDatas(res.data.data);
+            setRandomevideo(res.data.data);
+          } else {
+            console.warn("⚠️ Unexpected random video response:", res.data);
+            setDatas([]);
+          }
         } catch (err) {
-          console.error("❌ Error fetching random videos:", err);
+          console.error("❌ Error fetching random videos:", err.message);
+          toast.error(err.message)
+          setDatas([]);
         } finally {
           setLoading(false);
         }
@@ -37,7 +40,7 @@ const Home = () => {
 
       getRandomVideos();
     }
-  }, [search, location.pathname, setLoading]);
+  }, [search, location.pathname, setLoading, setRandomevideo]);
 
   const displayedVideos = search ? data : datas;
 
@@ -59,14 +62,29 @@ const Home = () => {
               {displayedVideos.map((item) => (
                 <div
                   key={item._id || item.videoId}
+                  onClick={() => {
+                    // ✅ Open video with playlist if available, otherwise without query
+                    if (item.playlistId) {
+                      navigate(`/video/${item.videoId}?playlistId=${item.playlistId}`);
+                    } else {
+                      navigate(`/video/${item.videoId}`);
+                    }
+                  }}
                   className="bg-white rounded-xl shadow hover:shadow-lg transition-transform duration-200 hover:scale-[1.02] overflow-hidden cursor-pointer"
-                  onClick={() => navigate(`/video/${item.videoId}?chId=${item.channelId}`)}
                 >
-                  <img
-                    src={item.thumbnail}
-                    alt={item.title}
-                    className="w-full h-48 object-cover"
-                  />
+                  <div className="relative rounded-xl overflow-hidden">
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="w-full aspect-video object-cover rounded-xl hover:rounded-none transition-all duration-300 hover:scale-105"
+                    />
+                    {item.duration && (
+                      <span className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs font-medium px-2 py-0.5 rounded">
+                        {item.duration}
+                      </span>
+                    )}
+                  </div>
+
                   <div className="p-3">
                     <h3 className="font-semibold text-gray-800 line-clamp-2">
                       {item.title}

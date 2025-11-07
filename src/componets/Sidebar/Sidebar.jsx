@@ -34,7 +34,7 @@ const Sidebar = () => {
       {/* Overlay for mobile */}
       {open && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-10 sm:hidden"
+          className="fixed inset-0 bg-transparent bg-opacity-30 backdrop-blur-sm z-10 sm:hidden"
           onClick={() => setOpen(false)}
         ></div>
       )}
@@ -45,12 +45,12 @@ const Sidebar = () => {
         ${open ? "translate-x-0" : "-translate-x-full sm:translate-x-0"}`}
       >
         <div className="flex items-center justify-between sm:hidden px-4 pt-4">
-          <h2 className="text-lg font-semibold text-gray-800">Categories</h2>
-          <ImCross
+          <h2 className="text-lg font-semibold text-gray-800 mt-10">Categories</h2>
+          {/* <ImCross
             size={16}
             className="text-gray-600 cursor-pointer"
             onClick={() => setOpen(false)}
-          />
+          /> */}
         </div>
 
         <div className="p-4 sm:pt-6">

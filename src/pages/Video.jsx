@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import YouTubePlayer from "../componets/YouTubePlayer";
 import { Searchcontext } from "../contextApi/SearchContext";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const Video = () => {
   const { setSearch, data, randomevideo } = useContext(Searchcontext);
@@ -10,40 +11,50 @@ const Video = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const channelID = searchParams.get("chId");
+  const playlistId = searchParams.get("playlistId");
 
   const [playlist, setPlaylist] = useState([]);
   const [currentVideo, setCurrentVideo] = useState(null);
   const [relatedVideos, setRelatedVideos] = useState([]);
 
-  const playlistId = "PLu71SKxNbfoDqgPchmvIsL4hTnJIrtige";
-
-  // Disable search mode on video page
+  // 🔹 Disable search mode when watching a video
   useEffect(() => {
     setSearch(false);
   }, [setSearch]);
 
-  // Fetch playlist videos
+  // 🔹 Fetch playlist videos only when playlistId exists
   useEffect(() => {
+    if (!playlistId) return; // 🛑 prevent 400 error if null
+
     const fetchPlaylist = async () => {
       try {
+        console.log("🎥 Playlist ID being fetched:", playlistId);
         const res = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/api/playlistItems?playlistId=${playlistId}`
         );
-        setPlaylist(res.data.data || []);
+
+        if (res.data?.success) {
+          setPlaylist(res.data.data || []);
+        } else {
+          console.warn("⚠️ Playlist fetch failed:", res.data?.message);
+          setPlaylist([]);
+        }
       } catch (err) {
+        toast.error(err.message)
         console.error("❌ Error fetching playlist:", err.message);
+        setPlaylist([]);
       }
     };
-    fetchPlaylist();
-  }, []);
 
-  // Filter playlist by channelID if exists
-  const filteredPlaylist = channelID
-    ? playlist.filter((video) => video.channelId === channelID)
+    fetchPlaylist();
+  }, [playlistId]);
+
+  // 🔹 Filter playlist by its ID (for safety)
+  const filteredPlaylist = playlistId
+    ? playlist.filter((video) => video.playlistId === playlistId)
     : playlist;
 
-  // Set current video
+  // 🔹 Set the currently playing video
   useEffect(() => {
     if (playlist.length > 0 && id) {
       const found = playlist.find((v) => v.videoId === id);
@@ -51,7 +62,7 @@ const Video = () => {
     }
   }, [playlist, id]);
 
-  // Combine search + random videos for recommendations
+  // 🔹 Combine search + random videos for recommended section
   useEffect(() => {
     const combined = [];
 
@@ -69,7 +80,7 @@ const Video = () => {
     setRelatedVideos(combined);
   }, [data, randomevideo, id]);
 
-  // Hide YouTube overlay buttons
+  // 🔹 Hide YouTube overlay elements
   useEffect(() => {
     const hideIcons = () => {
       const icons = document.querySelectorAll(`
@@ -92,18 +103,50 @@ const Video = () => {
     };
   }, []);
 
-  // Scroll to top when video changes
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "auto" });
-  }, [id]);
+  // 🔹 Scroll to top when switching videos
+useEffect(() => {
 
-  // Auto-play next video in playlist
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+}, [id]);
+
+useEffect(() => {
+  const fetchRecommended = async () => {
+    try {
+      if (!data?.length || !randomevideo?.length) {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/random`);
+        const randomVideos = res.data?.data || [];
+        setRelatedVideos(randomVideos.filter(v => v.videoId !== id));
+      } else {
+        // combine context data as before
+        const combined = [];
+        if (Array.isArray(data)) {
+          combined.push(...data.filter((v) => v.videoId !== id));
+        }
+        if (Array.isArray(randomevideo)) {
+          const uniqueRandoms = randomevideo.filter(
+            (v) => v.videoId !== id && !combined.some((x) => x.videoId === v.videoId)
+          );
+          combined.push(...uniqueRandoms);
+        }
+        setRelatedVideos(combined);
+      }
+    } catch (err) {
+      console.error("Failed to load recommended videos", err);
+      setRelatedVideos([]);
+    }
+  };
+
+  fetchRecommended();
+}, [id]);
+
+  // 🔹 Auto-play next video in the playlist
   const handleVideoEnd = () => {
     if (filteredPlaylist.length > 0) {
       const currentIndex = filteredPlaylist.findIndex((v) => v.videoId === id);
       if (currentIndex >= 0 && currentIndex < filteredPlaylist.length - 1) {
         const nextVideo = filteredPlaylist[currentIndex + 1];
-        navigate(`/video/${nextVideo.videoId}?chId=${nextVideo.channelId}`);
+        navigate(`/video/${nextVideo.videoId}?playlistId=${nextVideo.playlistId}`);
       }
     }
   };
@@ -111,9 +154,9 @@ const Video = () => {
   return (
     <div className="min-h-screen bg-gray-50 px-3 sm:px-6 py-6">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-        {/* Left Section — Main Video + Related Videos */}
+        {/* Left Section — Video Player + Recommendations */}
         <div className="flex-1">
-          {/* Main Video Player */}
+          {/* YouTube Player */}
           <div className="rounded-2xl overflow-hidden shadow-lg bg-black mb-5">
             <YouTubePlayer videoId={id} onEnd={handleVideoEnd} />
           </div>
@@ -131,7 +174,7 @@ const Video = () => {
             </div>
           )}
 
-          {/* Related Videos */}
+          {/* Recommended Videos */}
           {relatedVideos.length > 0 && (
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
@@ -141,16 +184,27 @@ const Video = () => {
                 {relatedVideos.map((item) => (
                   <div
                     key={item._id || item.videoId}
-                    onClick={() =>
-                      navigate(`/video/${item.videoId}?chId=${item.channelId}`)
-                    }
+                    onClick={() => {
+                      if (playlistId) {
+                        navigate(`/video/${item.videoId}?playlistId=${item.playlistId}`);
+                      } else {
+                        navigate(`/video/${item.videoId}`);
+                      }
+                    }}
                     className="cursor-pointer bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 hover:-translate-y-1"
                   >
+                   <div className="relative rounded-xl overflow-hidden">
                     <img
                       src={item.thumbnail}
                       alt={item.title}
-                      className="w-full h-44 object-contain rounded-t-xl"
+                      className="w-full aspect-video object-cover rounded-xl hover:rounded-none transition-all duration-300 hover:scale-105"
                     />
+                    {item.duration && (
+                      <span className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs font-medium px-2 py-0.5 rounded">
+                        {item.duration}
+                      </span>
+                    )}
+                  </div>
                     <div className="p-3">
                       <h3 className="font-semibold text-gray-900 text-base line-clamp-2">
                         {item.title}
@@ -166,18 +220,16 @@ const Video = () => {
           )}
         </div>
 
-        {/* Right Section — Playlist (only if channel matches) */}
+        {/* Right Section — Playlist Sidebar */}
         {filteredPlaylist.length > 0 && (
           <div className="lg:w-1/3 bg-white rounded-2xl shadow-md p-4 h-100">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              📜 Playlist
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">📜 Playlist</h2>
             <div className="flex flex-col gap-3 max-h-full overflow-y-auto">
               {filteredPlaylist.map((video, index) => (
                 <div
                   key={video.videoId}
                   onClick={() =>
-                    navigate(`/video/${video.videoId}?chId=${video.channelId}`)
+                    navigate(`/video/${video.videoId}?playlistId=${video.playlistId}`)
                   }
                   className={`flex gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition ${
                     video.videoId === id ? "bg-blue-50 border border-blue-400" : ""

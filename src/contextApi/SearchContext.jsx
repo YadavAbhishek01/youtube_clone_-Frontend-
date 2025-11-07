@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 export const Searchcontext = createContext();
 
@@ -24,11 +25,12 @@ export const SearchcontextProvider = ({ children }) => {
         );
 
       
-        console.log(res.data.data)
+     
         setData(res.data.data);
  
       } catch (err) {
         console.error("❌ Error fetching videos:", err);
+        toast.error(err.message)
       } finally {
         setLoading(false);
       }
