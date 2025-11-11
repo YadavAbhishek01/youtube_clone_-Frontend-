@@ -11,7 +11,7 @@ const Sidebar = () => {
   const [open, setOpen] = useState(false);
 
   const handleCategoryClick = (category) => {
-    setQuery(category);
+    setQuery(category); 
     setSearch(category !== "sorts"); // 👈 only search auto when not sort
     setPagetype(category === "sorts" ? "sort" : "home");
     console.log(pagetype)
