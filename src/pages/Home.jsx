@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import CryptoJS from "crypto-js";
 const Home = () => {
   const [datas, setDatas] = useState([]);
-    const secretKey = import.meta.env.VITE_SECRET_KEY;
+  const secretKey = import.meta.env.VITE_SECRET_KEY;
   const {
     data,
     search,
@@ -30,14 +30,14 @@ const Home = () => {
             `${import.meta.env.VITE_BACKEND_URL}/api/random`
           );
 
-          const bytes=CryptoJS.AES.decrypt(res.data.data,secretKey);
-          const descrypt=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-         if (res.data?.success && Array.isArray(descrypt)) {
-  setDatas(descrypt);
-  setRandomevideo(descrypt);
-} else {
-  setDatas([]);
-}
+          const bytes = CryptoJS.AES.decrypt(res.data.data,secretKey);
+          const descrypt = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+          if (res.data?.success && Array.isArray(descrypt)) {
+            setDatas(descrypt);
+            setRandomevideo(descrypt);
+          } else {
+            setDatas([]);
+          }
 
         } catch (err) {
           console.error("❌ Error fetching random videos:", err.message);
@@ -68,8 +68,8 @@ const Home = () => {
               {pagetype === "sort"
                 ? "Sorted Videos"
                 : search
-                ? "Search Results"
-                : "Recommended Videos"}
+                  ? "Search Results"
+                  : "Recommended Videos"}
             </h2>
 
             {/* ✅ Show sort options only when Sort page is selected */}
