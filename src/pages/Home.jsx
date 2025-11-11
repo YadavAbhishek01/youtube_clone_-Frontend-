@@ -1,48 +1,58 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { Searchcontext } from "../contextApi/SearchContext";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { toast } from "react-toastify";
+import CryptoJS from "crypto-js";
 const Home = () => {
   const [datas, setDatas] = useState([]);
-  const { data, search, loading, setLoading, setRandomevideo } =
-    useContext(Searchcontext);
-
+    const secretKey = import.meta.env.VITE_SECRET_KEY;
+  const {
+    data,
+    search,
+    loading,
+    setRandomevideo,
+    pagetype,
+    setPagetype,
+    query,
+    sortBy,
+    setSortBy,
+  } = useContext(Searchcontext);
   const navigate = useNavigate();
-  const location = useLocation();
 
+  // ✅ Fetch random videos when not searching & not in sort mode
   useEffect(() => {
-    // ✅ Only fetch random videos when user is NOT searching
-    if (!search && location.pathname === "/") {
+    if (!search && pagetype === "home") {
       const getRandomVideos = async () => {
-        setLoading(true);
         try {
           const res = await axios.get(
             `${import.meta.env.VITE_BACKEND_URL}/api/random`
           );
 
-          if (res.data?.success && Array.isArray(res.data.data)) {
-            setDatas(res.data.data);
-            setRandomevideo(res.data.data);
-          } else {
-            console.warn("⚠️ Unexpected random video response:", res.data);
-            setDatas([]);
-          }
+          const bytes=CryptoJS.AES.decrypt(res.data.data,secretKey);
+          const descrypt=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+         if (res.data?.success && Array.isArray(descrypt)) {
+  setDatas(descrypt);
+  setRandomevideo(descrypt);
+} else {
+  setDatas([]);
+}
+
         } catch (err) {
           console.error("❌ Error fetching random videos:", err.message);
-          toast.error(err.message)
+          toast.error(err.message);
           setDatas([]);
-        } finally {
-          setLoading(false);
         }
       };
 
       getRandomVideos();
     }
-  }, [search, location.pathname, setLoading, setRandomevideo]);
+  }, [search, pagetype, setRandomevideo]);
 
-  const displayedVideos = search ? data : datas;
+  // ✅ Decide what to show
+  const displayedVideos =
+    pagetype === "sort" ? data : search ? data : datas;
 
   return (
     <main className="flex-1 p-4 overflow-y-auto">
@@ -53,9 +63,36 @@ const Home = () => {
         </div>
       ) : (
         <>
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            {search ? "Search Results" : "Recommended Videos"}
-          </h2>
+          <div className="flex justify-between items-center mb-5 border-b border-gray-200 pb-3">
+            <h2 className="text-2xl font-semibold text-gray-800">
+              {pagetype === "sort"
+                ? "Sorted Videos"
+                : search
+                ? "Search Results"
+                : "Recommended Videos"}
+            </h2>
+
+            {/* ✅ Show sort options only when Sort page is selected */}
+            {pagetype === "sort" && (
+              <div className="flex items-center gap-2">
+                <label htmlFor="sort" className="text-sm text-gray-600">
+                  Sort by:
+                </label>
+                <select
+                  id="sort"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="relevance">Default</option>
+                  <option value="date">Newest</option>
+                  <option value="viewCount">Most Viewed</option>
+                  <option value="rating">Top Rated</option>
+                  <option value="title">Alphabetical</option>
+                </select>
+              </div>
+            )}
+          </div>
 
           {displayedVideos.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -63,7 +100,6 @@ const Home = () => {
                 <div
                   key={item._id || item.videoId}
                   onClick={() => {
-                    // ✅ Open video with playlist if available, otherwise without query
                     if (item.playlistId) {
                       navigate(`/video/${item.videoId}?playlistId=${item.playlistId}`);
                     } else {
@@ -76,7 +112,7 @@ const Home = () => {
                     <img
                       src={item.thumbnail}
                       alt={item.title}
-                      className="w-full aspect-video object-cover rounded-xl hover:rounded-none transition-all duration-300 hover:scale-105"
+                      className="w-full aspect-video object-cover rounded-xl hover:scale-105 transition-all duration-300"
                     />
                     {item.duration && (
                       <span className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs font-medium px-2 py-0.5 rounded">
