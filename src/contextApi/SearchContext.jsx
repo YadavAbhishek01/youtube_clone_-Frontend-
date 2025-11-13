@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import CryptoJS from "crypto-js";
+import { decryptData } from "../componets/uilities";
 export const Searchcontext = createContext();
 
 export const SearchcontextProvider = ({ children }) => {
@@ -12,7 +12,6 @@ export const SearchcontextProvider = ({ children }) => {
   const [randomevideo, setRandomevideo] = useState([]);
   const [pagetype, setPagetype] = useState("home");
   const [sortBy, setSortBy] = useState("relevance");
-  const secretKey = import.meta.env.VITE_SECRET_KEY;
   // ✅ Fetch videos dynamically based on page type
   useEffect(() => {
 
@@ -37,8 +36,7 @@ export const SearchcontextProvider = ({ children }) => {
           );
         }
 
-        const bytes=CryptoJS.AES.decrypt(res.data.data,secretKey);
-        const descrypt=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const descrypt=decryptData(res.data.data);
         setData(descrypt|| []);
       } catch (err) {
         console.error("❌ Error fetching videos:", err);

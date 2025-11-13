@@ -4,12 +4,11 @@ import { Searchcontext } from "../contextApi/SearchContext";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { toast } from "react-toastify";
-import CryptoJS from "crypto-js";
+import { decryptData } from "../componets/uilities";
 const Home = () => {
   const [datas, setDatas] = useState([]);
-  const secretKey = import.meta.env.VITE_SECRET_KEY;
   const {
-    data,
+    data, 
     search,
     loading,
     setRandomevideo,
@@ -29,9 +28,7 @@ const Home = () => {
           const res = await axios.get(
             `${import.meta.env.VITE_BACKEND_URL}/api/random`
           );
-
-          const bytes = CryptoJS.AES.decrypt(res.data.data,secretKey);
-          const descrypt = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+          const descrypt =decryptData(res.data.data);
           if (res.data?.success && Array.isArray(descrypt)) {
             setDatas(descrypt);
             setRandomevideo(descrypt);
